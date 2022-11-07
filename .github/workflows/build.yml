@@ -2,8 +2,6 @@ on:
   push:
     branches:
       - master
-      - develop
-      - sonar-qube-setup
 
 jobs:
   build:
