@@ -25,9 +25,9 @@ jobs:
           python -m pip install pytest
 
       # Test
-      - name: Test with pytest
-        run: |
-          pytest --cov=./ --cov-report=xml --doctest-modules
+      #- name: Test with pytest
+      #  run: |
+      #    pytest --cov=./ --cov-report=xml --doctest-modules
 
       # Sonar Qube
       - name: SonarCloud Scan
