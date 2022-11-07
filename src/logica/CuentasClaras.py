@@ -33,6 +33,18 @@ class CuentasClaras():
         else:
             return False
 
+    def editarActivity(self, id, nombre, estaTerminada):
+        if not nombre or nombre.isspace():
+            return False
+        self.actividad = session.query(Actividad).filter(Actividad.id == id).first()
+        if self.actividad is not None:
+            self.actividad.nombre = nombre
+            self.actividad.estaTerminada = estaTerminada
+            session.commit()
+            return True
+        else:
+            return False
+
     def eliminarActividad(self, id_actividad):
         session.query(Gasto).filter(Gasto.actividad == id_actividad).delete()
         session.query(ViajeroActividad).filter(ViajeroActividad.actividad_id == id_actividad).delete()
