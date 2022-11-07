@@ -39,6 +39,12 @@ class CuentasClaras():
         session.query(Actividad).filter(Actividad.id == id_actividad).delete()
         session.commit()
 
+    def borrarActividad(self, id_actividad):
+        session.query(Gasto).filter(Gasto.actividad == id_actividad).delete()
+        session.query(ViajeroActividad).filter(ViajeroActividad.actividad_id == id_actividad).delete()
+        session.query(Actividad).filter(Actividad.id == id_actividad).delete()
+        session.commit()
+
     def crearViajero(self, nombre, apellido):
         if not nombre or nombre.isspace():
             return "Campo Nombre Viajero es obligatorio."
