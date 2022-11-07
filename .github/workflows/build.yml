@@ -26,14 +26,12 @@ jobs:
           pip install -r requirements.txt
 
 
-      - name: pruebas+coverage
-        id: pruebas
-        run: | 
-          python -m coverage run -m unittest discover tests
-      #    python -m coverage xml -i
-      #    coverage run -m unittest discover -s tests -v
-          python -m coverage report -m
-      #    python -m pip install pytest
+      - name: Generate Report
+        run: |
+          pip install coverage
+          coverage run -m unittest
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v
 
       # Test
       #- name: Test with pytest
