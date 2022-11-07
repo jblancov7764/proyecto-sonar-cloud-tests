@@ -401,6 +401,85 @@ class CuentasClaras():
                 reporte.insert(0, encabezado)
         return reporte
 
+    def generaReporteCompensation(self, actividad_id):
+        reporte = []
+        gastos = session.query(Gasto).filter(Gasto.actividad == actividad_id).all()
+        if len(gastos) > 0:
+            totalGastos = 0
+            for gasto in gastos:
+                totalGastos += gasto.valor
+            viajeros_actividades = session.query(ViajeroActividad).filter(
+                ViajeroActividad.actividad_id == actividad_id).all()
+            if len(viajeros_actividades) > 0:
+                viajeros = []
+                for viajero_actividad in viajeros_actividades:
+                    viajeros.append(session.query(Viajero).filter(Viajero.id == viajero_actividad.viajero_id).first())
+                totalPorPersona = totalGastos / len(viajeros)
+                arr_les_deben = []
+                arr_deben_pagar = []
+                deuda_total = 0
+                encabezado_index = []
+                for viajero in viajeros:
+                    encabezado_index.append(viajero.id)
+                    gastos_por_viajero = list(filter(lambda gasto: gasto.viajero == viajero.id, gastos))
+                    total_pagado_por_viajero = 0
+                    for gasto_x_viajero in gastos_por_viajero:
+                        total_pagado_por_viajero += gasto_x_viajero.valor
+                    if total_pagado_por_viajero > totalPorPersona:
+                        arr_les_deben.append({'id': viajero.id, 'valor': total_pagado_por_viajero - totalPorPersona,
+                                              'nombre': viajero.nombre, 'apellido': viajero.apellido})
+                    elif total_pagado_por_viajero < totalPorPersona:
+                        arr_deben_pagar.append({'id': viajero.id, 'valor': totalPorPersona - total_pagado_por_viajero,
+                                                'nombre': viajero.nombre, 'apellido': viajero.apellido, 'beneficiados': []})
+                        deuda_total += totalPorPersona - total_pagado_por_viajero
+                while deuda_total > 0:
+                    for viajero_le_deben in arr_les_deben:
+                        if viajero_le_deben['valor'] > 0:
+                            for viajero_debe_pagar in arr_deben_pagar:
+                                if viajero_debe_pagar['valor'] > 0:
+                                    if viajero_le_deben['valor'] >= viajero_debe_pagar['valor']:
+                                        viajero_le_deben['valor'] -= viajero_debe_pagar['valor']
+                                        deuda_total -= viajero_debe_pagar['valor']
+                                        viajero_debe_pagar['beneficiados'].append({'id': viajero_le_deben['id'], 'valor': viajero_debe_pagar['valor']})
+                                        viajero_debe_pagar['valor'] = 0
+                                    else:
+                                        viajero_debe_pagar['valor'] -= viajero_le_deben['valor']
+                                        deuda_total -= viajero_le_deben['valor']
+                                        viajero_debe_pagar['beneficiados'].append(
+                                            {'id': viajero_le_deben['id'], 'valor': viajero_le_deben['valor']})
+                                        viajero_le_deben['valor'] = 0
+                                        break
+                    if deuda_total < 0.5:
+                        deuda_total = 0
+                encabezado = ['']
+                for viajero in viajeros:
+                    cuerpo_tabla = []
+                    encabezado.append(viajero.nombre + ' ' + viajero.apellido)
+                    cuerpo_tabla.append(viajero.nombre + ' ' + viajero.apellido)
+                    viajero_tmp = None
+                    for viajero_debe_pagar in arr_deben_pagar:
+                        if viajero_debe_pagar['id'] == viajero.id:
+                            viajero_tmp = viajero_debe_pagar
+                            break
+                    for id_index in encabezado_index:
+                        if id_index == viajero.id:
+                            cuerpo_tabla.append(-1)
+                        else:
+                            if viajero_tmp is not None:
+                                encontro = False
+                                for beneficiado in viajero_tmp['beneficiados']:
+                                    if id_index == beneficiado['id']:
+                                        encontro = True
+                                        cuerpo_tabla.append(beneficiado['valor'])
+                                        break
+                                if not encontro:
+                                    cuerpo_tabla.append(0)
+                            else:
+                                cuerpo_tabla.append(0)
+                    reporte.append(cuerpo_tabla)
+                reporte.insert(0, encabezado)
+        return reporte
+
     def crearGasto(self, concepto, valor, fecha, id_viajero, id_actividad):
         if concepto is None or valor is None or fecha is None or id_viajero is None or id_actividad is None:
             return "Faltan parámetros para la creación"
