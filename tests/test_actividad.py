@@ -22,7 +22,7 @@ class ActividadTestCase(unittest.TestCase):
             self.data.append(
                 (
                     i,
-                    "Actividad prueba " + str(i),
+                    " Actividad prueba " + str(i),
                     0
                 )
             )
